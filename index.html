@@ -184,29 +184,7 @@
   .setting-toggle::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;}
   .setting-toggle.on::after{transform:translateX(18px);}
 
-  /* ── Text size classes ── */
-  body.text-xs .t-link a{font-size:11px;}
-  body.text-xs .t-link .type-badge{font-size:10px;}
-  body.text-xs .tile-header{font-size:10.5px;padding:8px 10px;}
-  body.text-xs .t-link{padding:3px 8px;}
-
-  body.text-sm .t-link a{font-size:12.5px;}
-  body.text-sm .t-link .type-badge{font-size:11px;}
-  body.text-sm .tile-header{font-size:11.5px;padding:10px 12px;}
-  body.text-sm .t-link{padding:5px 8px;}
-
-  body.text-md .t-link a{font-size:14px;}
-  body.text-md .tile-header{font-size:13px;}
-
-  body.text-lg .t-link a{font-size:16px;}
-  body.text-lg .t-link .type-badge{font-size:14px;}
-  body.text-lg .tile-header{font-size:14.5px;padding:14px 14px;}
-  body.text-lg .t-link{padding:8px 10px;}
-
-  body.text-xl .t-link a{font-size:18px;}
-  body.text-xl .t-link .type-badge{font-size:16px;}
-  body.text-xl .tile-header{font-size:16px;padding:16px 14px;}
-  body.text-xl .t-link{padding:10px 12px;}
+  /* ── Text size — applied dynamically via JS ── */
 
   /* ── Density classes ── */
   body.density-compact .tile-grid{grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;}
@@ -258,13 +236,11 @@
   <div class="settings-panel" id="settingsPanel">
     <h3>⚙ Display Settings</h3>
     <div class="setting-row">
-      <div><div class="setting-label">Text Size</div><div class="setting-desc">Adjust link and header text size</div></div>
-      <div class="setting-options" id="textSizeOpts">
-        <button onclick="setSetting('textSize','xs')" data-val="xs">XS</button>
-        <button onclick="setSetting('textSize','sm')" data-val="sm">S</button>
-        <button onclick="setSetting('textSize','md')" data-val="md">M</button>
-        <button onclick="setSetting('textSize','lg')" data-val="lg">L</button>
-        <button onclick="setSetting('textSize','xl')" data-val="xl">XL</button>
+      <div><div class="setting-label">Text Size</div><div class="setting-desc">Drag to adjust — <span id="sizeLabel">Medium</span></div></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="color:#888;font-size:11px;">A</span>
+        <input type="range" id="textSlider" min="11" max="22" value="14" step="1" oninput="setTextSize(this.value)" style="width:120px;accent-color:#da5700;cursor:pointer;">
+        <span style="color:#888;font-size:16px;font-weight:700;">A</span>
       </div>
     </div>
     <div class="setting-row">
@@ -347,8 +323,8 @@
       <div class="feature-card">
         <div class="f-icon">🔤</div>
         <div class="f-title">Text Size</div>
-        <div class="f-desc">Make link text smaller for more density, or larger for easier reading. Five sizes from extra small to extra large.</div>
-        <div class="f-how">HOW: ⚙ Settings → Text Size → XS / S / M / L / XL</div>
+        <div class="f-desc">Drag the slider to dial in your perfect text size — from compact to extra large. Everything scales proportionally.</div>
+        <div class="f-how">HOW: ⚙ Settings → drag the Text Size slider</div>
       </div>
       <div class="feature-card">
         <div class="f-icon">📐</div>
@@ -975,9 +951,33 @@ function closeCustomize(){document.getElementById('customizeModal').classList.re
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('customizeModal').classList.contains('show'))closeCustomize();});
 
 // ── Settings ──
-let settings=LS.get('settings',{textSize:'md',density:'default',dark:false,icons:true});
+let settings=LS.get('settings',{textSize:14,density:'default',dark:false,icons:true});
 
 function toggleSettings(){document.getElementById('settingsPanel').classList.toggle('show');}
+
+function setTextSize(val){
+  val=parseInt(val);
+  settings.textSize=val;LS.set('settings',settings);applyTextSize(val);
+}
+
+function applyTextSize(size){
+  const s=parseInt(size);
+  document.querySelectorAll('.t-link a').forEach(el=>{el.style.fontSize=s+'px';});
+  document.querySelectorAll('.t-link .type-badge').forEach(el=>{el.style.fontSize=Math.max(s-2,10)+'px';});
+  document.querySelectorAll('.tile-header').forEach(el=>{el.style.fontSize=Math.max(s-1,10)+'px';el.style.padding=Math.max(Math.round(s*0.7),8)+'px '+Math.max(Math.round(s*0.8),10)+'px';});
+  document.querySelectorAll('.t-link').forEach(el=>{el.style.padding=Math.max(Math.round(s*0.45),4)+'px '+Math.max(Math.round(s*0.6),6)+'px';});
+  document.querySelectorAll('.t-link .star').forEach(el=>{el.style.fontSize=Math.max(s,13)+'px';});
+  // Update slider and label
+  const slider=document.getElementById('textSlider');
+  if(slider)slider.value=s;
+  const label=document.getElementById('sizeLabel');
+  if(label){
+    if(s<=12)label.textContent='Small';
+    else if(s<=15)label.textContent='Medium';
+    else if(s<=18)label.textContent='Large';
+    else label.textContent='Extra Large';
+  }
+}
 
 function setSetting(key,val){
   settings[key]=val;LS.set('settings',settings);applySettings();
@@ -992,11 +992,7 @@ function toggleIcons(){
 function applySettings(){
   const b=document.body;
   // Text size
-  b.classList.remove('text-xs','text-sm','text-md','text-lg','text-xl');
-  b.classList.add('text-'+settings.textSize);
-  document.querySelectorAll('#textSizeOpts button').forEach(btn=>{
-    btn.classList.toggle('active',btn.dataset.val===settings.textSize);
-  });
+  applyTextSize(settings.textSize);
   // Density
   b.classList.remove('density-compact','density-default','density-cozy');
   if(settings.density!=='default')b.classList.add('density-'+settings.density);
