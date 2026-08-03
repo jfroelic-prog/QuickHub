@@ -39,7 +39,9 @@
   .p-chip .x{background:none;border:none;cursor:pointer;color:var(--or);font-weight:700;font-size:13px;}
 
   .content{max-width:1400px;margin:0 auto;padding:18px 12px 40px;}
-  .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start;}
+  .tile-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;align-items:start;grid-auto-flow:row dense;}
+  .tile.wide{grid-column:span 2;}
+  .tile.wide .tile-body{display:grid;grid-template-columns:1fr 1fr;gap:0 6px;align-items:start;}
 
   .tile{background:var(--card);border-radius:10px;overflow:visible;border:1px solid var(--bd);box-shadow:0 2px 8px rgba(0,0,0,.06);transition:all .25s ease;position:relative;}
   .tile:hover{box-shadow:0 4px 16px rgba(0,0,0,.1);transform:translateY(-2px);z-index:10;}
@@ -210,8 +212,8 @@
   body.dark .feature-card{background:#1a1a1a;border-color:#333;}
   body.dark .feature-card:hover{border-color:var(--or);}
 
-  @media(max-width:700px){.tile-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}.brand h1{font-size:17px;}.settings-panel{padding:12px 14px;}.welcome .tips{grid-template-columns:1fr 1fr;gap:8px;}.welcome{padding:18px;}.modal{padding:20px;}.feature-grid{grid-template-columns:1fr;}.live-preview{width:280px;height:220px;}}
-  @media(max-width:400px){.tile-grid{grid-template-columns:1fr 1fr;gap:8px;}.welcome .tips{grid-template-columns:1fr;}.welcome-overlay{padding-top:60px;}}
+  @media(max-width:700px){.tile-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr));}.brand h1{font-size:17px;}.settings-panel{padding:12px 14px;}.welcome .tips{grid-template-columns:1fr 1fr;gap:8px;}.welcome{padding:18px;}.modal{padding:20px;}.feature-grid{grid-template-columns:1fr;}.live-preview{width:280px;height:220px;}.tile.wide .tile-body{grid-template-columns:1fr;}}
+  @media(max-width:400px){.tile-grid{grid-template-columns:1fr 1fr;gap:8px;}.welcome .tips{grid-template-columns:1fr;}.welcome-overlay{padding-top:60px;}.tile.wide{grid-column:span 2;}}
 </style>
 </head>
 <body>
@@ -627,6 +629,8 @@ function render(){
   data.forEach(cat=>{
     const tile=document.createElement('div');
     tile.className='tile';tile.dataset.id=cat.id;tile.draggable=false;
+    // Tiles with many links span 2 columns and split links into 2 sub-columns
+    if(cat.links.length>=7)tile.classList.add('wide');
 
     // Header (drag handle for tile)
     const hdr=document.createElement('div');
